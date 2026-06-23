@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LogiDepot Wallet — Two-Sided Marketplace Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  :root{
+    --paper:#FAF9F4;
+    --paper-2:#F1EFE6;
+    --ink:#1C1B17;
+    --ink-soft:#6B6A60;
+    --line:#D8D5C8;
+    --hold:#B45309;
+    --hold-bg:#FEF3E2;
+    --go:#166534;
+    --go-bg:#E8F3EA;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  body{
+    background:#EEECE3;
+    color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    padding:24px 16px 60px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  .page{max-width:420px; margin:0 auto;}
+
+  .demo-tip{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);
+    text-align:center; margin-bottom:14px; line-height:1.6;
+  }
+  .demo-tip strong{color:var(--ink);}
+
+  .frame{
+    background:var(--paper); border-radius:20px; overflow:hidden;
+    box-shadow:0 12px 32px rgba(28,27,23,0.14), 0 1px 0 rgba(28,27,23,0.06);
+    min-height:640px; display:flex; flex-direction:column;
+    border:1px solid var(--line);
+  }
+
+  .topbar{
+    display:flex; align-items:center; gap:10px; padding:16px 18px;
+    border-bottom:2px solid var(--ink); background:#fff;
+  }
+  .topbar .wordmark{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; letter-spacing:-0.01em;}
+  .topbar .wordmark span{color:var(--hold);}
+  .topbar .meta{flex:1; min-width:0;}
+  .topbar .who{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .topbar .role{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); letter-spacing:0.06em; text-transform:uppercase;}
+  .switch-btn{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+    background:none; border:1px solid var(--line); border-radius:5px; padding:5px 9px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .switch-btn:hover{border-color:var(--ink); color:var(--ink);}
+  .switch-btn:focus-visible{outline:2px solid var(--hold); outline-offset:2px;}
+
+  .body{padding:18px; flex:1; display:flex; flex-direction:column; gap:16px;}
+
+  /* ---- LOGIN ---- */
+  #screen-login .body{padding:28px 22px;}
+  .login-head{text-align:center; margin-bottom:8px;}
+  .login-head .brand{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:18px;}
+  .login-head .brand span{color:var(--hold);}
+  .login-head .powered{font-size:11px; color:var(--ink-soft); margin-top:4px; font-family:'IBM Plex Mono',monospace;}
+  .login-sub{font-size:13px; color:var(--ink-soft); text-align:center; margin-bottom:6px;}
+
+  .role-card{
+    display:flex; align-items:center; gap:14px; padding:14px 16px;
+    border:1.5px solid var(--line); border-radius:10px; background:#fff;
+    cursor:pointer; text-align:left; width:100%;
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  .role-card:hover{border-color:var(--ink); transform:translateY(-1px);}
+  .role-card:focus-visible{outline:2px solid var(--hold); outline-offset:2px;}
+  .avatar{
+    width:42px; height:42px; border-radius:8px; background:var(--ink); color:var(--paper);
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .role-card .info{flex:1;}
+  .role-card .name{font-size:14.5px; font-weight:600;}
+  .role-card .sub{font-size:12px; color:var(--ink-soft); margin-top:1px;}
+  .role-card .arrow{font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); font-size:16px;}
+
+  .divider{
+    display:flex; align-items:center; gap:10px; margin:6px 0 2px;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+  .divider::before, .divider::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  .reset-link{
+    margin-top:auto; text-align:center; font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:var(--ink-soft); background:none; border:none;
+    text-decoration:underline; cursor:pointer; padding-top:10px;
+  }
+
+  /* ---- shared cards ---- */
+  .card{background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px;}
+  .card-label{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;}
+
+  .balances{display:flex; gap:10px;}
+  .bal{flex:1; border:1px dashed var(--line); border-radius:7px; padding:10px 12px;}
+  .bal .k{font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-soft);}
+  .bal .v{font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; margin-top:2px;}
+  .bal.reserved .v{color:var(--hold);}
+
+  .limit-bar{height:6px; background:var(--paper-2); border-radius:3px; overflow:hidden; margin:6px 0 4px;}
+  .limit-bar i{display:block; height:100%; background:var(--ink); transition:width .5s ease;}
+  .limit-note{font-size:10.5px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;}
+
+  .kyc-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line);}
+  .kyc-row:first-child{border-top:none;}
+  .kyc-row.locked .kyc-title, .kyc-row.locked .kyc-sub{color:var(--ink-soft);}
+  .kyc-check{
+    width:20px;height:20px;border-radius:5px;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+    color:var(--go); flex-shrink:0; background:#fff;
+  }
+  .kyc-check.done{background:var(--go-bg); border-color:var(--go);}
+  .kyc-text{flex:1;}
+  .kyc-title{font-size:13px; font-weight:600;}
+  .kyc-sub{font-size:11px; color:var(--ink-soft); margin-top:1px;}
+  .kyc-btn{
+    font-family:'IBM Plex Sans'; font-size:11.5px; font-weight:600; padding:6px 10px;
+    border-radius:6px; border:1px solid var(--ink); background:#fff; cursor:pointer; white-space:nowrap;
+  }
+  .kyc-btn:disabled{opacity:.5; cursor:not-allowed; border-color:var(--line); color:var(--ink-soft);}
+
+  .kyc-flow{
+    padding:12px; background:var(--paper-2); border:1px dashed var(--line);
+    border-radius:8px; font-size:12.5px;
+  }
+  .kyc-flow .signup-title{font-size:13.5px; font-weight:600; margin-bottom:10px;}
+  .kyc-flow p{margin-bottom:8px; line-height:1.5;}
+  .kyc-flow .row-btns{display:flex; gap:8px;}
+  .kyc-flow button.small{
+    flex:1; font-family:'IBM Plex Sans'; font-size:12px; font-weight:600; padding:8px;
+    border-radius:6px; border:1px solid var(--ink); background:#fff; cursor:pointer;
+  }
+  .kyc-flow button.small.dark{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+  .kyc-input{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; margin-bottom:8px;
+  }
+  .kyc-upload{
+    border:1.5px dashed var(--line); border-radius:8px; padding:16px; text-align:center;
+    font-size:12px; color:var(--ink-soft); margin-bottom:8px; cursor:pointer;
+  }
+  .spinner{
+    width:13px; height:13px; border:2px solid var(--line); border-top-color:var(--hold);
+    border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{ to { transform:rotate(360deg); } }
+  .note-small{font-size:10.5px; color:var(--ink-soft); font-style:italic; margin-top:2px;}
+
+  button.primary{
+    font-family:'IBM Plex Sans'; font-weight:600; font-size:14px; border:none;
+    border-radius:8px; padding:13px; cursor:pointer; width:100%; background:var(--ink); color:var(--paper);
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  button.primary:disabled{opacity:.4; cursor:not-allowed;}
+  button.primary:not(:disabled):hover{transform:translateY(-1px);}
+  button.confirm{background:var(--go);}
+  button:focus-visible{outline:2px solid var(--hold); outline-offset:2px;}
+
+  .status-card{border-radius:10px; padding:14px 16px; font-size:13px; transition:all .25s ease;}
+  .status-idle{background:var(--paper-2); color:var(--ink-soft); border:1px solid var(--line);}
+  .status-pending{background:var(--hold-bg); color:var(--hold); border:1px solid var(--hold); font-weight:600;}
+  .status-cleared{background:var(--go-bg); color:var(--go); border:1px solid var(--go); font-weight:600;}
+  .status-card .countdown{display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:400; margin-top:4px; opacity:.85;}
+
+  .stamp{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700;
+    letter-spacing:0.06em; padding:2px 7px; border-radius:3px; transform:rotate(-3deg); margin-left:6px;
+  }
+  .stamp.hold{background:var(--hold-bg); color:var(--hold); border:1.5px solid var(--hold);}
+  .stamp.go{background:var(--go-bg); color:var(--go); border:1.5px solid var(--go);}
+
+  .delivery-meta{font-size:12.5px; color:var(--ink-soft); line-height:1.6;}
+  .last-note{font-size:11.5px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; margin-top:auto;}
+
+  .screen{display:none;}
+  .screen.active{display:flex; flex-direction:column; flex:1;}
+
+  footer.global{
+    margin-top:16px; font-size:11px; color:var(--ink-soft); text-align:center;
+    font-family:'IBM Plex Mono',monospace; line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="demo-tip">Two-sided marketplace demo — open this file in <strong>two browser tabs</strong>: log in as Retailer in one and Rider in the other, and actions sync live. Sign up / tier upgrades are a separate flow from the wallet itself.</p>
+
+  <div class="frame">
+
+    <!-- LOGIN -->
+    <section class="screen active" id="screen-login">
+      <div class="body">
+        <div class="login-head">
+          <div class="brand">LogiDepot <span>Wallet</span></div>
+          <div class="powered">Wallets issued by Sycamore Microfinance Bank</div>
+        </div>
+        <p class="login-sub">Choose an account to continue</p>
+
+        <button class="role-card" data-role="retailer">
+          <div class="avatar">MN</div>
+          <div class="info">
+            <div class="name">Mama Ngozi's Provisions</div>
+            <div class="sub">Kiosk owner · Tier 1 wallet</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
+
+        <button class="role-card" data-role="rider">
+          <div class="avatar">TU</div>
+          <div class="info">
+            <div class="name">Tunde</div>
+            <div class="sub">LogiDepot delivery rider</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
+
+        <div class="divider">or</div>
+
+        <button class="role-card" id="signupEntry">
+          <div class="avatar" style="background:var(--hold);">+</div>
+          <div class="info">
+            <div class="name">Sign up a new retailer</div>
+            <div class="sub">Walk through Tier 1 → 2 → 3 verification</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
+
+        <button class="reset-link" id="resetBtn">Reset demo data</button>
+      </div>
+    </section>
+
+    <!-- RETAILER APP -->
+    <section class="screen" id="screen-retailer">
+      <div class="topbar">
+        <div class="wordmark">LD<span>·</span></div>
+        <div class="meta">
+          <div class="who">Mama Ngozi's Provisions</div>
+          <div class="role">Retailer · Tier <span id="r-tierNum">1</span></div>
+        </div>
+        <button class="switch-btn" data-logout>Switch account</button>
+      </div>
+      <div class="body">
+
+        <div class="card">
+          <p class="card-label">Wallet</p>
+          <div class="balances">
+            <div class="bal"><div class="k">Available</div><div class="v" id="r-avail">₦0</div></div>
+            <div class="bal reserved"><div class="k">Reserved</div><div class="v" id="r-reserved">₦0</div></div>
+          </div>
+          <p class="limit-note" style="margin-top:10px;">Daily limit used</p>
+          <div class="limit-bar"><i id="r-limitBar" style="width:0%;"></i></div>
+          <p class="limit-note" id="r-limitText"></p>
+        </div>
+
+        <div class="card">
+          <p class="card-label">Delivery requests</p>
+          <div class="status-card status-idle" id="r-statusCard">No pending requests</div>
+          <button class="primary confirm" id="r-confirmBtn" style="margin-top:10px; display:none;">Confirm delivery received → release to LogiDepot</button>
+        </div>
+
+        <div class="card">
+          <p class="card-label">Verification &amp; KYC</p>
+
+          <div class="kyc-row">
+            <div class="kyc-check done">✓</div>
+            <div class="kyc-text">
+              <div class="kyc-title">Tier 1 — BVN/NIN verified</div>
+              <div class="kyc-sub">₦50,000/day · ₦300,000 balance</div>
+            </div>
+          </div>
+
+          <div class="kyc-row" id="kycRow2">
+            <div class="kyc-check" id="kycCheck2"></div>
+            <div class="kyc-text">
+              <div class="kyc-title">Tier 2 — Link a TIN</div>
+              <div class="kyc-sub">₦200,000/day · ₦500,000 balance</div>
+            </div>
+            <button class="kyc-btn" id="kycBtn2">Start</button>
+          </div>
+
+          <div class="kyc-row" id="kycRow3">
+            <div class="kyc-check" id="kycCheck3"></div>
+            <div class="kyc-text">
+              <div class="kyc-title">Tier 3 — Registered business (optional)</div>
+              <div class="kyc-sub">No daily cap · full KYC + CAC</div>
+            </div>
+            <button class="kyc-btn" id="kycBtn3">Upgrade</button>
+          </div>
+        </div>
+
+        <p class="last-note" id="r-lastNote"></p>
+      </div>
+    </section>
+
+    <!-- RIDER APP -->
+    <section class="screen" id="screen-rider">
+      <div class="topbar">
+        <div class="wordmark">LD<span>·</span></div>
+        <div class="meta">
+          <div class="who">Tunde</div>
+          <div class="role">Rider</div>
+        </div>
+        <button class="switch-btn" data-logout>Switch account</button>
+      </div>
+      <div class="body">
+
+        <div class="card">
+          <p class="card-label">Current delivery</p>
+          <p style="font-weight:600; font-size:14.5px;" id="d-id">Delivery #4521</p>
+          <p class="delivery-meta">12 cartons Knorr cubes — Unilever consignment<br/>To: Mama Ngozi's Provisions</p>
+        </div>
+
+        <button class="primary" id="rider-requestBtn">Arrived — request settlement (₦18,500)</button>
+
+        <div class="card">
+          <p class="card-label">Status</p>
+          <div class="status-card status-idle" id="rider-statusCard">Ready when you are — tap above on arrival.</div>
+        </div>
+
+        <p class="last-note" id="rider-lastNote"></p>
+      </div>
+    </section>
+
+    <!-- SIGN UP / KYC FLOW (separate from the wallet) -->
+    <section class="screen" id="screen-signup">
+      <div class="topbar">
+        <div class="wordmark">LD<span>·</span></div>
+        <div class="meta">
+          <div class="who">Retailer sign up</div>
+          <div class="role">KYC verification</div>
+        </div>
+        <button class="switch-btn" id="signupExitBtn">Go to wallet</button>
+      </div>
+      <div class="body">
+        <div class="card" style="padding:0; border:none; background:none;">
+          <div id="signupBody" class="kyc-flow"></div>
+        </div>
+        <button class="reset-link" id="restartSignupBtn" style="margin-top:auto;">Restart this walkthrough (back to Step 1 of 2)</button>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="global">
+    Settlement happens on Sycamore's internal rails (direct NIBSS connectivity) — not a separate interbank transfer — which is what removes the wait.<br/>
+    Limits shown are indicative CBN tiered-KYC ranges, to be confirmed against Sycamore's current circular.
+  </footer>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'logidepot_marketplace_state_v1';
+  const ROLE_KEY = 'logidepot_role';
+  const HOLD_AMOUNT = 18500;
+  const HOLD_DURATION_MS = 5 * 60 * 1000;
+
+  const DEFAULT_STATE = {
+    available: 42300,
+    reserved: 0,
+    dailyUsed: 7000,
+    dailyCap: 50000,
+    tier: 1,
+    deliveryCounter: 4521,
+    hold: null,        // {amount, deliveryId, requestedAt, expiresAt}
+    lastResolved: null // {amount, deliveryId, status, at}
+  };
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }catch(e){ return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+  }
+  function saveState(s){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    render();
+  }
+  function fmt(n){ return '₦' + Math.round(n).toLocaleString('en-NG'); }
+  function timeLeft(expiresAt){
+    const ms = Math.max(0, expiresAt - Date.now());
+    const total = Math.ceil(ms/1000);
+    const m = Math.floor(total/60), s = total%60;
+    return m + ':' + (s<10?'0':'') + s;
+  }
+
+  // ---- routing: login / retailer / rider / signup ----
+  let viewOverride = null; // 'signup' or null
+
+  function getRole(){ return sessionStorage.getItem(ROLE_KEY); }
+  function setRole(role){ sessionStorage.setItem(ROLE_KEY, role); route(); }
+  function logout(){ sessionStorage.removeItem(ROLE_KEY); route(); }
+
+  function route(){
+    const role = getRole();
+    const showSignup = viewOverride === 'signup';
+    document.getElementById('screen-login').classList.toggle('active', !showSignup && !role);
+    document.getElementById('screen-retailer').classList.toggle('active', !showSignup && role === 'retailer');
+    document.getElementById('screen-rider').classList.toggle('active', !showSignup && role === 'rider');
+    document.getElementById('screen-signup').classList.toggle('active', showSignup);
+    render();
+  }
+
+  function openSignup(){
+    const s = loadState();
+    if (s.tier === 1){ tinStep = 'choose'; cacStep = 'closed'; }
+    else if (s.tier === 2){ cacStep = 'ask'; tinStep = 'closed'; }
+    else { tinStep = 'closed'; cacStep = 'closed'; }
+    lastSignupKey = null;
+    viewOverride = 'signup';
+    route();
+  }
+
+  function goToWalletFromSignup(){
+    // Per the requested flow: always land back on the login/role picker,
+    // not directly back into the dashboard — keeps sign-up and wallet fully separate.
+    viewOverride = null;
+    sessionStorage.removeItem(ROLE_KEY);
+    route();
+  }
+  window.goSignupExit = goToWalletFromSignup;
+
+  function restartWalkthrough(){
+    // Resets only the KYC tier — leaves wallet balances, holds, and settlement
+    // history untouched so this can be replayed independently, as many times as needed.
+    const s = loadState();
+    s.tier = 1;
+    s.dailyCap = 50000;
+    saveState(s);
+    openSignup();
+  }
+
+  // ---- settlement / hold logic ----
+  function checkAutoRelease(){
+    const s = loadState();
+    if (s.hold && Date.now() >= s.hold.expiresAt){
+      resolveHold('auto-released');
+    }
+  }
+
+  function resolveHold(status){
+    const s = loadState();
+    if (!s.hold) return;
+    const { amount, deliveryId } = s.hold;
+    s.reserved = Math.max(0, s.reserved - amount);
+    s.lastResolved = { amount, deliveryId, status, at: Date.now() };
+    s.hold = null;
+    saveState(s);
+  }
+
+  function requestSettlement(){
+    const s = loadState();
+    if (s.hold) return;
+    if (s.available < HOLD_AMOUNT){
+      alert('Insufficient available balance for this settlement.');
+      return;
+    }
+    s.available -= HOLD_AMOUNT;
+    s.reserved += HOLD_AMOUNT;
+    s.dailyUsed += HOLD_AMOUNT;
+    const id = s.deliveryCounter;
+    s.hold = { amount: HOLD_AMOUNT, deliveryId: id, requestedAt: Date.now(), expiresAt: Date.now() + HOLD_DURATION_MS };
+    s.deliveryCounter = id + 1;
+    saveState(s);
+  }
+
+  // ---- KYC sub-flow state (local UI state only — not synced across tabs) ----
+  let tinStep = 'closed';     // closed | choose | enterTin | verifying | registering | done
+  let cacStep = 'closed';     // closed | ask | no | upload | reviewing | done
+  let lastSignupKey = null;
+
+  function finishTinUpgrade(){
+    const s = loadState();
+    if (s.tier < 2){ s.tier = 2; s.dailyCap = 200000; saveState(s); }
+  }
+  function finishCacUpgrade(){
+    const s = loadState();
+    if (s.tier < 3){ s.tier = 3; s.dailyCap = 5000000; saveState(s); }
+  }
+
+  window.tinAction = function(action){
+    if (action === 'open'){ tinStep = 'choose'; }
+    else if (action === 'have'){ tinStep = 'enterTin'; }
+    else if (action === 'verifyEntered'){
+      tinStep = 'verifying';
+      setTimeout(function(){ tinStep = 'done'; finishTinUpgrade(); render(); }, 1500);
+    }
+    else if (action === 'need'){
+      tinStep = 'registering';
+      setTimeout(function(){ tinStep = 'done'; finishTinUpgrade(); render(); }, 3400);
+    }
+    else if (action === 'continueTier3'){ tinStep = 'closed'; cacStep = 'ask'; }
+    render();
+  };
+
+  window.cacAction = function(action){
+    if (action === 'open'){ cacStep = 'ask'; }
+    else if (action === 'no'){ cacStep = 'no'; }
+    else if (action === 'yes'){ cacStep = 'upload'; }
+    else if (action === 'submit'){
+      cacStep = 'reviewing';
+      setTimeout(function(){ cacStep = 'done'; finishCacUpgrade(); render(); }, 3400);
+    }
+    render();
+  };
+
+  function tinFlowHTML(step){
+    if (step === 'choose'){
+      return '<p><strong>Link your TIN</strong> to unlock Tier 2 limits.</p>'
+        + '<div class="row-btns">'
+        + '<button class="small" onclick="window.tinAction(\'have\')">I already have one</button>'
+        + '<button class="small dark" onclick="window.tinAction(\'need\')">I need to register</button>'
+        + '</div>';
+    }
+    if (step === 'enterTin'){
+      return '<p>Enter your TIN:</p>'
+        + '<input class="kyc-input" placeholder="e.g. 2348-XXXXX-1" />'
+        + '<div class="row-btns">'
+        + '<button class="small dark" onclick="window.tinAction(\'verifyEntered\')">Verify</button>'
+        + '<button class="small" onclick="window.tinAction(\'open\')">Back</button>'
+        + '</div>';
+    }
+    if (step === 'verifying'){
+      return '<p><span class="spinner"></span>Verifying TIN…</p>';
+    }
+    if (step === 'registering'){
+      return '<p><span class="spinner"></span>Submitting registration to TIN partner (linked to FIRS)…</p>'
+        + '<p class="note-small">Real issuance can take same-day to a few business days — compressed here for demo.</p>';
+    }
+    if (step === 'done'){
+      return '<p>✓ TIN linked — Tier 2 unlocked.</p>'
+        + '<button class="small dark" style="width:100%;" onclick="window.tinAction(\'continueTier3\')">Continue to Tier 3 (optional)</button>';
+    }
+    return '';
+  }
+
+  function cacFlowHTML(step){
+    if (step === 'ask'){
+      return '<p>Do you have CAC registration documents for this business?</p>'
+        + '<div class="row-btns">'
+        + '<button class="small" onclick="window.cacAction(\'no\')">No</button>'
+        + '<button class="small dark" onclick="window.cacAction(\'yes\')">Yes</button>'
+        + '</div>';
+    }
+    if (step === 'no'){
+      return "<p>No problem — most kiosk owners stay at Tier 2. You can revisit this anytime once you're registered.</p>"
+        + '<button class="small dark" style="width:100%;" onclick="window.goSignupExit()">Got it — go to wallet</button>';
+    }
+    if (step === 'upload'){
+      return '<div class="kyc-upload">Tap to upload CAC certificate (mock)</div>'
+        + '<button class="small dark" style="width:100%;" onclick="window.cacAction(\'submit\')">Submit for review</button>';
+    }
+    if (step === 'reviewing'){
+      return '<p><span class="spinner"></span>Reviewing documents…</p>'
+        + '<p class="note-small">A real review typically takes 1–3 business days — compressed here for demo.</p>';
+    }
+    if (step === 'done'){
+      return '<p>✓ Approved — Tier 3 unlocked, no daily cap.</p>'
+        + '<button class="small dark" style="width:100%;" onclick="window.goSignupExit()">Done — go to wallet</button>';
+    }
+    return '';
+  }
+
+  // ---- render: retailer wallet (status display only — no inline flows) ----
+  function renderRetailer(){
+    const s = loadState();
+    document.getElementById('r-avail').textContent = fmt(s.available);
+    document.getElementById('r-reserved').textContent = fmt(s.reserved);
+    if (s.tier >= 3){
+      document.getElementById('r-limitBar').style.width = '100%';
+      document.getElementById('r-limitText').textContent = 'No daily cap — Tier 3, full KYC';
+    } else {
+      document.getElementById('r-limitBar').style.width = Math.min(100, (s.dailyUsed/s.dailyCap)*100) + '%';
+      document.getElementById('r-limitText').textContent = fmt(s.dailyUsed) + ' of ' + fmt(s.dailyCap) + ' daily cap';
+    }
+    document.getElementById('r-tierNum').textContent = s.tier;
+
+    const check2 = document.getElementById('kycCheck2');
+    check2.className = 'kyc-check' + (s.tier>=2?' done':'');
+    check2.textContent = s.tier>=2 ? '✓' : '';
+    document.getElementById('kycBtn2').style.display = s.tier>=2 ? 'none' : 'inline-block';
+
+    document.getElementById('kycRow3').classList.toggle('locked', s.tier<2);
+    const check3 = document.getElementById('kycCheck3');
+    check3.className = 'kyc-check' + (s.tier>=3?' done':'');
+    check3.textContent = s.tier>=3 ? '✓' : '';
+    const btn3 = document.getElementById('kycBtn3');
+    btn3.disabled = s.tier<2 || s.tier>=3;
+    btn3.textContent = s.tier>=3 ? 'Upgraded' : (s.tier<2 ? 'Complete Tier 2 first' : 'Upgrade');
+
+    const statusCard = document.getElementById('r-statusCard');
+    const confirmBtn = document.getElementById('r-confirmBtn');
+    if (s.hold){
+      statusCard.className = 'status-card status-pending';
+      statusCard.innerHTML = 'Tunde requested settlement <span class="stamp hold">RESERVED</span><br/>' +
+        fmt(s.hold.amount) + ' for Delivery #' + s.hold.deliveryId +
+        '<span class="countdown">Auto-releases in ' + timeLeft(s.hold.expiresAt) + ' if no action</span>';
+      confirmBtn.style.display = 'block';
+    } else {
+      confirmBtn.style.display = 'none';
+      statusCard.className = 'status-card status-idle';
+      statusCard.textContent = 'No pending requests';
+    }
+
+    const lastNote = document.getElementById('r-lastNote');
+    if (s.lastResolved){
+      const ago = Math.round((Date.now()-s.lastResolved.at)/1000);
+      lastNote.textContent = 'Last: ' + fmt(s.lastResolved.amount) + ' · Delivery #' + s.lastResolved.deliveryId +
+        ' · ' + (s.lastResolved.status === 'auto-released' ? 'auto-released' : 'confirmed') +
+        ' ' + ago + 's ago';
+    } else { lastNote.textContent = ''; }
+  }
+
+  function renderRider(){
+    const s = loadState();
+    const idEl = document.getElementById('d-id');
+    const statusCard = document.getElementById('rider-statusCard');
+    const reqBtn = document.getElementById('rider-requestBtn');
+    const lastNote = document.getElementById('rider-lastNote');
+
+    if (s.hold){
+      idEl.textContent = 'Delivery #' + s.hold.deliveryId;
+      reqBtn.disabled = true;
+      statusCard.className = 'status-card status-pending';
+      statusCard.innerHTML = 'Waiting for retailer to confirm <span class="stamp hold">RESERVED</span>' +
+        '<span class="countdown">Auto-clears in ' + timeLeft(s.hold.expiresAt) + '</span>';
+    } else {
+      idEl.textContent = 'Delivery #' + s.deliveryCounter;
+      reqBtn.disabled = false;
+      reqBtn.textContent = (s.deliveryCounter > 4521 ? 'Next delivery — request settlement (₦18,500)' : 'Arrived — request settlement (₦18,500)');
+      const justCleared = s.lastResolved && (Date.now() - s.lastResolved.at < 15000);
+      if (justCleared){
+        statusCard.className = 'status-card status-cleared';
+        statusCard.innerHTML = '✓ Cleared by retailer <span class="stamp go">RELEASED</span><br/>Delivery #' + s.lastResolved.deliveryId + ' settled — hand over the goods.';
+      } else {
+        statusCard.className = 'status-card status-idle';
+        statusCard.textContent = 'Ready when you are — tap above on arrival.';
+      }
+    }
+    lastNote.textContent = '';
+  }
+
+  function renderSignup(){
+    const s = loadState();
+    const key = s.tier + '|' + tinStep + '|' + cacStep;
+    if (key === lastSignupKey) return; // skip rebuild if nothing changed (preserves typed input)
+    lastSignupKey = key;
+    const body = document.getElementById('signupBody');
+    if (s.tier >= 3){
+      body.innerHTML = '<p class="signup-title">✓ Fully verified</p>'
+        + '<p>Tier 3 is unlocked — no daily cap. Nothing left to complete.</p>'
+        + '<button class="small dark" style="width:100%;" onclick="window.goSignupExit()">Go to wallet</button>';
+    } else if (s.tier === 2){
+      body.innerHTML = '<p class="signup-title">Step 2 of 2 — Registered business (optional)</p>' + cacFlowHTML(cacStep || 'ask');
+    } else {
+      body.innerHTML = '<p class="signup-title">Step 1 of 2 — Link your TIN</p>' + tinFlowHTML(tinStep || 'choose');
+    }
+  }
+
+  function render(){
+    if (viewOverride === 'signup'){ renderSignup(); return; }
+    const role = getRole();
+    if (role === 'retailer') renderRetailer();
+    else if (role === 'rider') renderRider();
+  }
+
+  // wiring
+  document.querySelectorAll('.role-card[data-role]').forEach(btn=>{
+    btn.addEventListener('click', ()=> setRole(btn.dataset.role));
+  });
+  document.querySelectorAll('[data-logout]').forEach(btn=>{
+    btn.addEventListener('click', logout);
+  });
+  document.getElementById('rider-requestBtn').addEventListener('click', requestSettlement);
+  document.getElementById('r-confirmBtn').addEventListener('click', ()=> resolveHold('released'));
+  document.getElementById('kycBtn2').addEventListener('click', openSignup);
+  document.getElementById('kycBtn3').addEventListener('click', openSignup);
+  document.getElementById('signupEntry').addEventListener('click', openSignup);
+  document.getElementById('signupExitBtn').addEventListener('click', goToWalletFromSignup);
+  document.getElementById('restartSignupBtn').addEventListener('click', restartWalkthrough);
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(ROLE_KEY);
+    location.reload();
+  });
+
+  window.addEventListener('storage', function(e){
+    if (e.key === STORAGE_KEY) render();
+  });
+
+  setInterval(function(){ checkAutoRelease(); render(); }, 1000);
+
+  route();
+})();
+</script>
+</body>
+</html>
